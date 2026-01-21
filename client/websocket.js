@@ -15,7 +15,7 @@ export function initSocket(callbacks) {
     } = callbacks;
 
     socket.on("stroke:segment", onStrokeSegment);
-    socket.on("stroke:end", (stroke) => { /* Optional: Handle local end if needed */ });
+    socket.on("stroke:end", (stroke) => {/*Handled locally*/});
     socket.on("stroke:commit", onStrokeCommit);
     socket.on("stroke:undo", onStrokeUndo);
     socket.on("stroke:redo", onStrokeRedo);
@@ -27,4 +27,10 @@ export function initSocket(callbacks) {
 
     socket.on("cursor:move", onCursorMove);
     socket.on("connect", onConnect);
+
+    socket.on("canvas:sync", (strokes) => {
+        strokes.forEach(stroke => {
+            callbacks.onStrokeCommit(stroke);
+        });
+    });
 }

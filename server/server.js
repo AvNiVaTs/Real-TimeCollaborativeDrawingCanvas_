@@ -44,6 +44,7 @@ io.on("connection", (socket) => {
   const user = rooms.addUser(socket.id);
 
   socket.emit("user:init", user);
+  socket.emit("canvas:sync", drawingState.getAllStrokes());
   socket.emit("user:existing", rooms.getAllUsers());
   socket.broadcast.emit("user:join", user);
 

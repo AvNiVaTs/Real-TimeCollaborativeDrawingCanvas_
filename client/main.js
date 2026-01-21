@@ -136,7 +136,8 @@ canvas.addEventListener("mousedown", (e) => {
     const y = e.clientY - rect.top;
 
     currStroke = {
-        color: tool === "eraser" ? "white" : strokeColor,
+        tool,
+        color: strokeColor,
         width: strokeWidth,
         points: [normalisePoints(x, y)]
     };

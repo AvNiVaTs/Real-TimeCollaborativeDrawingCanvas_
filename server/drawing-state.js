@@ -37,8 +37,13 @@ function redo() {
     return null;
 }
 
+function getAllStrokes() {
+    return strokes;
+}
+
 module.exports = {
     addStroke,
     undo,
-    redo
+    redo,
+    getAllStrokes
 };

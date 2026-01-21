@@ -21,27 +21,32 @@ export function denormalisePoints(x, y) {
 
 export function drawStroke(stroke) {
     if (!stroke || !stroke.points) return;
+    if (!stroke.active) return;
 
-    const { color, width, points } = stroke;
-
-    if (points.length < 2) return;
-
-    ctx.strokeStyle = color;
+    ctx.save();
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
-    ctx.lineWidth = width;
+    ctx.lineWidth = stroke.width;
+
+    if (stroke.tool === "eraser") {
+        ctx.globalCompositeOperation = "destination-out";
+        ctx.strokeStyle = "rgba(0,0,0,1)";
+    } else {
+        ctx.globalCompositeOperation = "source-over";
+        ctx.strokeStyle = stroke.color;
+    }
 
     ctx.beginPath();
-
-    const start = denormalisePoints(points[0].x, points[0].y);
+    const start = denormalisePoints(stroke.points[0].x, stroke.points[0].y);
     ctx.moveTo(start.x, start.y);
 
-    for (let i = 1; i < points.length; i++) {
-        const p = denormalisePoints(points[i].x, points[i].y);
+    for (let i = 1; i < stroke.points.length; i++) {
+        const p = denormalisePoints(stroke.points[i].x, stroke.points[i].y);
         ctx.lineTo(p.x, p.y);
     }
 
     ctx.stroke();
+    ctx.restore();
 }
 
 export function redrawAll(strokeMap) {
