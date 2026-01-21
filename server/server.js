@@ -2,8 +2,11 @@ const http = require("http");
 const path = require("path");
 const fs = require("fs");
 const { Server } = require("socket.io");
-const crypto = require("crypto");
 
+const rooms = require("./rooms");
+const drawingState = require("./drawing-state");
+
+// Locate client folder relative to this file
 const CLIENT_DIR = path.join(__dirname, "..", "client");
 
 const server = http.createServer((req, res) => {
@@ -36,21 +39,15 @@ const io = new Server(server, {
   cors: { origin: "*" }
 });
 
-const connectedUsers = {};
-const strokes = [];
-
 io.on("connection", (socket) => {
-  const user = {
-    id: socket.id,
-    color: `hsl(${Math.random() * 360}, 100%, 70%)`
-  };
-
-  connectedUsers[socket.id] = user;
+  // --- User Management ---
+  const user = rooms.addUser(socket.id);
 
   socket.emit("user:init", user);
-  socket.emit("user:existing", connectedUsers);
+  socket.emit("user:existing", rooms.getAllUsers());
   socket.broadcast.emit("user:join", user);
 
+  // --- Cursors ---
   socket.on("cursor:move", (pos) => {
     socket.broadcast.emit("cursor:move", {
       userId: socket.id,
@@ -59,52 +56,38 @@ io.on("connection", (socket) => {
     });
   });
 
+  // --- Drawing ---
   socket.on("stroke:segment", (segment) => {
     socket.broadcast.emit("stroke:segment", segment);
   });
 
   socket.on("stroke:end", (stroke) => {
-    if (!stroke || !stroke.points) return;
-
-    const committedStroke = {
-      ...stroke,
-      id: crypto.randomUUID(),
-      userId: socket.id,
-      active: true,
-      timestamp: Date.now()
-    };
-
-    strokes.push(committedStroke);
-
-    // send to ALL clients (including sender)
-    io.emit("stroke:commit", committedStroke);
+    const committedStroke = drawingState.addStroke(stroke, socket.id);
+    if (committedStroke) {
+      io.emit("stroke:commit", committedStroke);
+    }
   });
 
-  socket.on("disconnect", () => {
-    delete connectedUsers[socket.id];
-    socket.broadcast.emit("user:leave", socket.id);
-  });
-
+  // --- Undo/Redo ---
   socket.on("undo", () => {
-    for (let i = strokes.length - 1; i >= 0; i--) {
-      if (strokes[i].active) {
-        strokes[i].active = false;
-        io.emit("stroke:undo", strokes[i].id);
-        break;
-      }
+    const undoneStrokeId = drawingState.undo();
+    if (undoneStrokeId) {
+      io.emit("stroke:undo", undoneStrokeId);
     }
   });
 
   socket.on("redo", () => {
-    for (let i = strokes.length - 1; i >= 0; i--) {
-      if (!strokes[i].active) {
-        strokes[i].active = true;
-        io.emit("stroke:redo", strokes[i]);
-        break;
-      }
+    const redoneStroke = drawingState.redo();
+    if (redoneStroke) {
+      io.emit("stroke:redo", redoneStroke);
     }
   });
 
+  // --- Disconnect ---
+  socket.on("disconnect", () => {
+    rooms.removeUser(socket.id);
+    socket.broadcast.emit("user:leave", socket.id);
+  });
 });
 
 const PORT = process.env.PORT || 3000;
