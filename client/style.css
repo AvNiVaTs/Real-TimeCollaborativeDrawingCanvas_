@@ -23,3 +23,51 @@ canvas {
   pointer-events: none;
   transform: translate(-50%, -50%);
 }
+
+.toolbar {
+  position: fixed;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 14px;
+  background: rgba(20, 20, 20, 0.95);
+  color: white;
+  border-radius: 10px;
+  z-index: 1000;
+  font-family: sans-serif;
+}
+
+.toolbar label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 14px;
+}
+
+.toolbar button {
+  background: #333;
+  border: none;
+  color: white;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.toolbar button.active {
+  background: #007bff;
+}
+
+.users-list {
+  margin-left: 10px;
+  display: flex;
+  gap: 6px;
+}
+
+.user-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}

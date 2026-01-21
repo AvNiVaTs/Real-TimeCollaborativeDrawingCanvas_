@@ -22,6 +22,11 @@ let myUser = null;
 let myCursor = null;
 let mySocketId = null;
 
+//Defining tools
+let tool = "brush";
+let strokeColor = "#ffffff";
+let strokeWidth = 2;
+
 
 //Creating necessary functions
 
@@ -160,7 +165,35 @@ socket.on("cursor:move", ({userId, x, y})=>{
 
     cursor.style.left = `${x*canvas.width}px`;
     cursor.style.top = `${y*canvas.height}px`;
-})
+});
+
+
+//Setting Tools properties
+const colorPicker = document.getElementById("colorPicker");
+const widthPicker = document.getElementById("widthPicker");
+const brushBtn = document.getElementById("brushBtn");
+const eraserBtn = document.getElementById("eraserBtn");
+
+colorPicker.addEventListener("change", (e) => {
+  strokeColor = e.target.value;
+});
+
+widthPicker.addEventListener("input", (e) => {
+  strokeWidth = Number(e.target.value);
+});
+
+brushBtn.addEventListener("click", () => {
+  tool = "brush";
+  brushBtn.classList.add("active");
+  eraserBtn.classList.remove("active");
+});
+
+eraserBtn.addEventListener("click", () => {
+  tool = "eraser";
+  eraserBtn.classList.add("active");
+  brushBtn.classList.remove("active");
+});
+
 
 //windows event handlers
 window.addEventListener("resize", () => {
@@ -195,8 +228,8 @@ canvas.addEventListener("mousedown", (e)=>{
     const y = e.clientY - rect.top;
 
     currStroke = {
-        color: myUser.color,
-        width: 2,
+        color: tool === "eraser" ? "black" : strokeColor,
+        width: strokeWidth,
         points: [normalisePoints(x, y)]
     }
 });
