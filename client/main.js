@@ -12,7 +12,7 @@ let mySocketId = null;
 
 // Tools
 let tool = "brush";
-let strokeColor = "#ffffff";
+let strokeColor = "#000000";
 let strokeWidth = 2;
 
 // --- Helper: Render Users ---
