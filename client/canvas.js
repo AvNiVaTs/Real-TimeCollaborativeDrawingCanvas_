@@ -86,6 +86,18 @@ function redrawAll() {
   }
 };
 
+function renderUsers() {
+  const list = document.getElementById("usersList");
+  list.innerHTML = "";
+
+  Object.values(users).forEach((user) => {
+    const dot = document.createElement("div");
+    dot.className = "user-dot";
+    dot.style.backgroundColor = user.color;
+    list.appendChild(dot);
+  });
+};
+
 
 //Websockets to receive and render remote strokes
 socket.on("stroke:segment", (segment)=>{
@@ -115,37 +127,29 @@ socket.on("stroke:redo", (stroke) => {
   redrawAll();
 });
 
-
-socket.on("user:init", (user)=>{
-    myUser = user;
-    users[user.id] = user;
-
-    //Initial Cursor
-    myCursor = document.createElement("div");
-    myCursor.className = "cursor";
-    myCursor.style.backgroundColor = myUser ? myUser.color : "white";
-    myCursor.id = "cursor-me";
-    
-    document.getElementById("canvas-container").appendChild(myCursor);
+socket.on("user:init", (user) => {
+  myUser = user;
+  users[user.id] = user;
+  renderUsers();
 });
 
 socket.on("user:existing", (existingUsers) => {
-    users = {...users, ...existingUsers};
-})
+  users = { ...existingUsers };
+  renderUsers();
+});
+
+socket.on("user:join", (user) => {
+  users[user.id] = user;
+  renderUsers();
+});
+
+socket.on("user:leave", (userId) => {
+  delete users[userId];
+  renderUsers();
+});
 
 socket.on("connect", () => {
     mySocketId = socket.id;
-});
-
-socket.on("user:join", (user)=>{
-    users[user.id] = user;
-});
-
-socket.on("user:leave", (userId)=>{
-    delete users[userId];
-
-    const cursor = document.getElementById(`cursor-${userId}`);
-    if(cursor) cursor.remove();
 });
 
     //Client rendering
@@ -228,7 +232,7 @@ canvas.addEventListener("mousedown", (e)=>{
     const y = e.clientY - rect.top;
 
     currStroke = {
-        color: tool === "eraser" ? "black" : strokeColor,
+        color: tool === "eraser" ? "white" : strokeColor,
         width: strokeWidth,
         points: [normalisePoints(x, y)]
     }
